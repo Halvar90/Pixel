@@ -160,10 +160,41 @@ python bot.py
 ### Datenbank erweitern
 Erweitere die `init_db()` Funktion in `database.py` um neue Tabellen oder Spalten.
 
-## 🚨 Railway-spezifische Features
+## 🎨 Erweiterte Logging Features
 
-- **Automatische DATABASE_URL Erkennung**
-- **Retry-Logik für Datenbankverbindungen**
-- **Signal Handler für graceful shutdown**
-- **Optimierte Logging für Railway Monitoring**
-- **Connection Pooling für bessere Performance**
+### � Visuell ansprechende Railway-Logs
+- **Emoji-basierte Log-Kategorien** für bessere Übersichtlichkeit
+- **Strukturierte Nachrichten** ohne Timestamps (Railway zeigt diese bereits)
+- **Farbkodierte Events** durch Emoji-System
+- **Event-Speicher** für Diagnose-APIs
+
+### 🔍 Log-Kategorien
+
+| Emoji | Kategorie | Beschreibung |
+|-------|-----------|-------------|
+| 🤖 | Bot Events | Bot-spezifische Ereignisse |
+| 👤 | User Actions | Benutzeraktionen |
+| 🎮 | Game Actions | Spieler-spezifische Aktionen |
+| 💰 | Economy | Pixel-Wirtschaft Events |
+| 🌍 | World Actions | Welt-bezogene Aktionen |
+| 🐾 | Creatures | Kreatur-Events |
+| 🗄️ | Database | Datenbankoperationen |
+| ⚙️ | System | System-Events |
+| 🚂 | Railway | Railway-spezifische Events |
+| ⚡ | Commands | Command-Nutzung |
+| 🔗 | Connections | Verbindungsstatus |
+| ✅ | Success | Erfolgreiche Operationen |
+| ❌ | Errors | Fehler und Probleme |
+| ⚠️ | Warnings | Warnungen |
+| 🚀 | Startup | Initialisierung |
+
+### 📋 Beispiel-Logs
+```
+🚀 Startup: Initializing Pixel Bot
+🔗 Connection to PostgreSQL: Connected successfully
+🤖 Bot Event: Bot successfully logged in - User: PixelBot#1234
+⚡ Command 'ping' used by 'User#1234' in 'TestServer' - Latency: 45ms
+💰 Economy: pixel_earned for 'Player123' - 50 pixels (quest_completed)
+🌍 World 'Forest': player_entered by 'Player123'
+✅ SUCCESS: Database initialization completed - All tables created/verified
+```
