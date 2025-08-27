@@ -1,11 +1,21 @@
-# Pixel Discord Bot
+# Pixel Discord Bot 🎮
 
-Ein modular aufgebauter Discord-Bot mit PostgreSQL-Datenbankunterstützung, optimiert für Railway-Hosting.
+Ein hochoptimierter, modular aufgebauter Discord-Bot mit PostgreSQL-Datenbankunterstützung, speziell optimiert für Railway-Hosting.
 
-## Bot-Informationen
+## 🚀 Railway-Optimierungen
+
+- **Automatische Datenbankverbindung**: Nutzt Railway's `DATABASE_URL`
+- **Graceful Shutdown**: Behandelt SIGTERM/SIGINT Signale korrekt
+- **Retry-Logik**: Robuste Datenbankverbindung mit exponential backoff
+- **Umfassendes Logging**: Strukturierte Logs für Railway-Monitoring
+- **Connection Pooling**: Optimierte Datenbankperformance
+- **Health Checks**: `/status` Command für Monitoring
+
+## 🤖 Bot-Informationen
 
 - **Client ID**: 1410207945257390131
 - **Application ID**: 1410207945257390131
+- **Repository**: https://github.com/Halvar90/Pixel
 
 ## Lokale Entwicklung
 
@@ -51,44 +61,45 @@ POSTGRES_PORT="5432"
 python bot.py
 ```
 
-## Railway Deployment
+## 🛠️ Railway Deployment (Empfohlen)
 
-### Schritt 1: GitHub Repository erstellen
-1. Erstelle ein neues GitHub Repository
-2. Pushe den Code:
-```bash
-git init
-git add .
-git commit -m "Initial commit"
-git branch -M main
-git remote add origin https://github.com/Halvar90/Pixel.git
-git push -u origin main
-```
+### Schritt 1: Repository ist bereits verbunden ✅
+- GitHub Repository: `https://github.com/Halvar90/Pixel`
 
 ### Schritt 2: Railway Projekt erstellen
 1. Gehe zu [Railway.app](https://railway.app)
-2. Erstelle ein neues Projekt
-3. Verbinde dein GitHub Repository
-4. Füge eine PostgreSQL-Datenbank hinzu
+2. **"New Project"** → **"Deploy from GitHub repo"**
+3. Wähle: **`Halvar90/Pixel`**
+4. Railway erkennt automatisch Python und verwendet die `railway.json` Konfiguration
 
-### Schritt 3: Umgebungsvariablen auf Railway setzen
-Verwende die Railway CLI oder das Web-Interface:
+### Schritt 3: PostgreSQL-Datenbank hinzufügen
+1. Im Railway Dashboard: **"Add Service"** → **"Database"** → **"PostgreSQL"**
+2. Railway setzt automatisch die `DATABASE_URL` Environment Variable
 
+### Schritt 4: Discord Bot Token setzen
+
+#### Option A: Railway CLI (Empfohlen)
 ```bash
-# Railway CLI Installation
+# Railway CLI installieren
 npm install -g @railway/cli
 
-# Login
+# Login und Projekt verknüpfen
 railway login
-
-# Projekt verknüpfen
 railway link
 
-# Umgebungsvariablen setzen
+# Discord Bot Token setzen
 railway variables set DISCORD_BOT_TOKEN="YOUR_DISCORD_BOT_TOKEN_HERE"
-
-# PostgreSQL-Variablen werden automatisch von Railway gesetzt
 ```
+
+#### Option B: Railway Web Interface
+1. Gehe zu deinem Railway Projekt
+2. **"Variables"** Tab
+3. Füge hinzu: `DISCORD_BOT_TOKEN` = `YOUR_DISCORD_BOT_TOKEN_HERE`
+
+### Schritt 5: Deployment überwachen
+- Railway deployed automatisch bei jedem Git Push
+- Logs sind im Railway Dashboard verfügbar
+- Nutze `/status` Command im Discord für Health Checks
 
 ## Projektstruktur
 
@@ -115,11 +126,30 @@ pixel-bot/
 - **player_world_progress**: Spieler-Fortschritt in verschiedenen Welten
 - **creatures**: Kreaturen, die Spieler besitzen
 
-## Verfügbare Befehle
+## 📋 Verfügbare Befehle
 
-- `/ping` - Zeigt die Bot-Latenz an
+### 🏓 General Commands
+- `/ping` - Zeigt Bot-Latenz und Uptime
+- `/status` - Detaillierte Bot-Status-Informationen für Monitoring
+- `/help` - Hilfe und Bot-Informationen
 
-## Entwicklung
+### 🔧 Monitoring Features
+- Health Check über `/status` Command
+- Strukturierte Logs für Railway
+- Automatische Reconnection bei Datenbankfehlern
+- Graceful Shutdown für Railway Deployments
+
+## 🏗️ Entwicklung
+
+### Lokale Entwicklung
+```bash
+# Virtual Environment aktivieren
+.venv\Scripts\activate  # Windows
+source .venv/bin/activate  # macOS/Linux
+
+# Bot lokal starten
+python bot.py
+```
 
 ### Neue Cogs hinzufügen
 1. Erstelle eine neue `.py` Datei in `cogs/`
@@ -129,3 +159,11 @@ pixel-bot/
 
 ### Datenbank erweitern
 Erweitere die `init_db()` Funktion in `database.py` um neue Tabellen oder Spalten.
+
+## 🚨 Railway-spezifische Features
+
+- **Automatische DATABASE_URL Erkennung**
+- **Retry-Logik für Datenbankverbindungen**
+- **Signal Handler für graceful shutdown**
+- **Optimierte Logging für Railway Monitoring**
+- **Connection Pooling für bessere Performance**
