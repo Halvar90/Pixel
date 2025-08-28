@@ -51,9 +51,6 @@ class UnicodeFormatter(logging.Formatter):
         # Logger-spezifisches Emoji
         logger_emoji = self.LOGGER_EMOJIS.get(record.name, '📦')
         
-        # Zeitstempel formatieren
-        timestamp = datetime.fromtimestamp(record.created).strftime('%H:%M:%S')
-        
         # Logger-Namen verkürzen für bessere Lesbarkeit
         logger_name = self._format_logger_name(record.name)
         
@@ -68,10 +65,9 @@ class UnicodeFormatter(logging.Formatter):
         elif record.levelname == 'WARNING':
             message = self._enhance_warning_message(message)
         
-        # Finale Formatierung - schön und übersichtlich
+        # Finale Formatierung - ohne Timestamp (Railway fügt eigene hinzu)
         formatted = (
             f"{level_style['emoji']} "
-            f"[{timestamp}] "
             f"{logger_emoji} "
             f"{logger_name}: "
             f"{message}"
