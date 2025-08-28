@@ -10,9 +10,23 @@ import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 
+# Enhanced Logging System
+from .utils.logger import (
+    setup_logging, 
+    create_progress_logger,
+    log_startup_step,
+    log_cog_loading,
+    log_system_status,
+    log_command_sync,
+    log_bot_ready
+)
+
 # Lokale Imports
 from .utils.emoji_manager import EmojiManager, emoji_manager
-from .utils.logger import setup_logging
+
+# Imports für intelligente Systeme
+from .systems import initialize_intelligent_systems
+from .systems.command_registration_system import CommandRegistrationSystem
 
 # Umgebungsvariablen laden
 load_dotenv()
@@ -145,27 +159,45 @@ class PixelBot(commands.Bot):
 
 async def main():
     """Haupt-Funktion zum Starten des Bots."""
-    # Logging setup
-    setup_logging()
+    # Enhanced Logging Setup
+    setup_logging(
+        level=logging.INFO,
+        log_to_file=True,
+        enhanced=True
+    )
+    
+    # Progress Logger für Startup
+    progress = create_progress_logger("startup")
+    progress.start_section("Bot Initialisierung", "🤖")
     
     # Bot Token prüfen
+    log_startup_step(1, 4, "Überprüfe Umgebungsvariablen")
     token = os.getenv('DISCORD_TOKEN')
     if not token:
-        logging.error("❌ DISCORD_TOKEN nicht in Umgebungsvariablen gefunden!")
+        progress.error("DISCORD_TOKEN nicht in Umgebungsvariablen gefunden!")
         sys.exit(1)
+    progress.success("Bot-Token gefunden und validiert")
     
     # Bot erstellen und starten
+    log_startup_step(2, 4, "Erstelle Bot-Instanz")
     bot = PixelBot()
+    progress.success("Bot-Instanz erfolgreich erstellt")
     
     try:
+        log_startup_step(3, 4, "Starte Bot-Verbindung zu Discord")
         await bot.start(token)
     except KeyboardInterrupt:
-        logging.info("🛑 Bot durch KeyboardInterrupt gestoppt")
+        progress.warning("Bot wurde durch Benutzer gestoppt (Ctrl+C)")
+        logging.info("🛑 Bot wird heruntergefahren...")
     except Exception as e:
-        logging.error(f"❌ Unerwarteter Fehler: {e}")
+        progress.error(f"Unerwarteter Fehler beim Bot-Start: {e}")
+        logging.exception("💥 Kritischer Fehler:")
     finally:
-        await bot.close()
-        logging.info("👋 Bot wurde heruntergefahren")
+        if 'bot' in locals():
+            log_startup_step(4, 4, "Schließe Bot-Verbindung sauber")
+            await bot.close()
+            progress.success("Bot sauber heruntergefahren")
+        progress.end_section(success=True)
 
 if __name__ == "__main__":
     asyncio.run(main())
