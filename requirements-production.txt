@@ -1,7 +1,0 @@
-# Core dependencies for Railway deployment
-discord.py>=2.6.2
-python-dotenv>=1.1.1
-asyncpg>=0.30.0
-
-# Optional: Performance and monitoring
-psutil>=6.1.0
