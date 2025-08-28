@@ -70,85 +70,126 @@ class PixelBot(commands.Bot):
     
     async def setup_hook(self):
         """Wird ausgeführt, bevor der Bot sich zu Discord verbindet."""
-        logging.info("🔧 Bot Setup wird gestartet...")
+        startup_logger = logging.getLogger("startup")
+        startup_logger.info("=" * 60)
+        startup_logger.info("⚙️ PHASE 2: BOT-INFRASTRUKTUR")
+        startup_logger.info("=" * 60)
         
         # 1. Datenbank und Cache initialisieren
         try:
-            log_startup_step("[4/7] Initialisiere Datenbank-Verbindung")
+            log_startup_step("[1/4] Initialisiere Datenbank-Verbindung")
             from .core.database import db
             await db.connect()
             await db.execute_schema()
-            log_startup_step("✅ ERFOLGREICH: Datenbank verbunden und Schema ausgeführt")
+            log_startup_step("✅ Datenbank verbunden und Schema geladen")
         except Exception as e:
-            logging.error(f"❌ Fehler bei Datenbankverbindung: {e}")
+            logging.error(f"❌ FEHLER: Datenbankverbindung fehlgeschlagen: {e}")
             
         try:
-            log_startup_step("[5/7] Initialisiere Redis-Cache")
+            log_startup_step("[2/4] Initialisiere Redis-Cache")
             from .core.cache import cache
             await cache.connect()
-            log_startup_step("✅ ERFOLGREICH: Redis-Cache verbunden")
+            log_startup_step("✅ Redis-Cache verbunden")
         except Exception as e:
-            logging.error(f"❌ Fehler bei Redis-Verbindung: {e}")
+            logging.error(f"❌ FEHLER: Redis-Verbindung fehlgeschlagen: {e}")
         
-        # 2. Emoji Manager nur erstellen, aber noch nicht synchronisieren
-        # (Synchronisation passiert in on_ready wenn Guild-ID verfügbar ist)
+        # 2. Emoji Manager vorbereiten (noch nicht synchronisieren)
+        log_startup_step("[3/4] Bereite Emoji-Manager vor")
         from .utils.emoji_manager import EmojiManager
         self.emoji_manager = EmojiManager(self)
+        log_startup_step("✅ Emoji-Manager erstellt")
         
         # 3. Intelligente Systeme initialisieren
         try:
-            log_startup_step("[6/7] Starte intelligente Systeme")
+            log_startup_step("[4/4] Starte intelligente Systeme")
             from .systems import setup_systems_for_bot
             database_url = os.getenv('DATABASE_URL')
             
             if database_url:
                 system_status = await setup_systems_for_bot(self, database_url)
-                logging.info(f"📊 System Status: {system_status.get('overall_success', False)}")
+                if system_status.get('overall_success', False):
+                    log_startup_step("✅ Intelligente Systeme initialisiert")
+                else:
+                    log_startup_step("⚠️ Intelligente Systeme mit Warnungen gestartet")
             else:
                 logging.warning("⚠️ DATABASE_URL nicht gefunden - Systeme ohne DB gestartet")
+                log_startup_step("⚠️ Systeme im Fallback-Modus")
         except Exception as e:
-            logging.error(f"❌ Fehler bei intelligenten Systemen: {e}")
+            logging.error(f"❌ FEHLER: Problem bei intelligenten Systemen: {e}")
         
-        # 4. Cogs laden
-        log_startup_step("[7/7] Lade Bot-Module (Cogs)")
-        await self._load_cogs()
-        
-        logging.info("✅ Bot Setup abgeschlossen.")
+        startup_logger.info("✅ PHASE 2 ABGESCHLOSSEN - Infrastruktur bereit\n")
     
     async def on_ready(self):
         """Wird ausgeführt, wenn der Bot bereit ist."""
-        logging.info(f"🤖 {self.user} ist online!")
-        logging.info(f"📊 Bot ist in {len(self.guilds)} Servern aktiv")
+        startup_logger = logging.getLogger("startup")
+        startup_logger.info("=" * 60)
+        startup_logger.info("🎯 PHASE 3: BOT-MODULE & COMMANDS")
+        startup_logger.info("=" * 60)
         
-        # Emoji-Manager initialisieren
+        # 1. Cogs laden
+        log_startup_step("[1/4] Lade Bot-Module (Cogs)")
+        await self._load_cogs()
+        log_startup_step("✅ Alle Bot-Module geladen")
+        
+        # 2. Emoji-Manager initialisieren
+        log_startup_step("[2/4] Synchronisiere Emoji-System")
         if self.main_guild_id:
             global emoji_manager
             emoji_manager = self.emoji_manager
-            await self.emoji_manager.initialize(self.main_guild_id)
+            try:
+                await self.emoji_manager.initialize(self.main_guild_id)
+                log_startup_step("✅ Emoji-System synchronisiert")
+            except Exception as e:
+                logging.error(f"❌ Emoji-Synchronisation fehlgeschlagen: {e}")
+                log_startup_step("⚠️ Emoji-System im Fallback-Modus")
         else:
-            logging.warning("⚠️ MAIN_GUILD_ID nicht gesetzt. Emoji-Manager wird nicht initialisiert.")
+            logging.warning("⚠️ MAIN_GUILD_ID nicht gesetzt - Emoji-Manager nicht verfügbar")
+            log_startup_step("⚠️ Emoji-System deaktiviert")
         
-        # Slash Commands synchronisieren (intelligentes System nutzen wenn verfügbar)
+        # 3. Slash Commands synchronisieren
+        log_startup_step("[3/4] Synchronisiere Discord-Commands")
         try:
             if hasattr(self, 'command_registration'):
                 # Intelligentes Command Registration System nutzen
                 sync_result = await self.command_registration.intelligent_sync()
                 if sync_result["success"]:
-                    logging.info(f"🧠 Intelligenter Sync: {sync_result['commands_synced']} Commands")
+                    log_startup_step(f"✅ {sync_result['commands_synced']} Commands synchronisiert (intelligent)")
                 else:
-                    logging.info(f"🔄 Command-Sync: {sync_result['message']}")
+                    log_startup_step(f"⚠️ Command-Sync: {sync_result['message']}")
             else:
                 # Fallback auf normalen Sync
                 synced = await self.tree.sync()
-                logging.info(f"🔄 {len(synced)} Slash Commands synchronisiert")
+                log_startup_step(f"✅ {len(synced)} Commands synchronisiert (standard)")
         except Exception as e:
-            logging.error(f"❌ Fehler beim Synchronisieren der Slash Commands: {e}")
+            logging.error(f"❌ Fehler bei Command-Synchronisation: {e}")
+            log_startup_step("❌ Command-Synchronisation fehlgeschlagen")
         
-        # Status setzen
+        # 4. Bot-Status setzen
+        log_startup_step("[4/4] Setze Bot-Status")
         await self.change_presence(
             activity=discord.Game(name="🌟 Im magischen Hain | /help"),
             status=discord.Status.online
         )
+        log_startup_step("✅ Bot-Status gesetzt")
+        
+        startup_logger.info("✅ PHASE 3 ABGESCHLOSSEN - Commands bereit\n")
+        
+        # ================================
+        # 🌟 PHASE 4: BOT READY & ONLINE  
+        # ================================
+        startup_logger.info("=" * 60)
+        startup_logger.info("🌟 PHASE 4: BOT VOLLSTÄNDIG BEREIT")
+        startup_logger.info("=" * 60)
+        
+        startup_logger.info(f"🤖 {self.user} ist erfolgreich online!")
+        startup_logger.info(f"📊 Aktiv in {len(self.guilds)} Server(n)")
+        startup_logger.info(f"👥 Erreicht {len(self.users)} Benutzer")
+        startup_logger.info("🎮 Alle Systeme funktionsfähig - Bot bereit für Commands!")
+        
+        startup_logger.info("=" * 60)
+        startup_logger.info("🚀 PIXEL BOT ERFOLGREICH GESTARTET!")
+        startup_logger.info("=" * 60)
+        startup_logger.info("")
     
     async def _load_cogs(self):
         """Lädt alle Cog-Module."""
@@ -160,12 +201,13 @@ class PixelBot(commands.Bot):
             'src.cogs.admin'
         ]
         
-        for cog in cog_files:
+        cogs_logger = logging.getLogger("cogs")
+        for i, cog in enumerate(cog_files, 1):
             try:
                 await self.load_extension(cog)
-                logging.info(f"✅ Cog geladen: {cog}")
+                cogs_logger.info(f"   ✅ [{i}/{len(cog_files)}] {cog.split('.')[-1]}")
             except Exception as e:
-                logging.error(f"❌ Fehler beim Laden von {cog}: {e}")
+                cogs_logger.error(f"   ❌ [{i}/{len(cog_files)}] {cog.split('.')[-1]}: {e}")
     
     async def on_command_error(self, ctx, error):
         """Globaler Error Handler."""
@@ -186,49 +228,77 @@ async def main():
         enhanced=True
     )
     
-    # Progress Logger für Startup
-    progress = create_progress_logger("startup")
-    progress.start_section("Bot Initialisierung", "🤖")
+    # ================================
+    # 🚀 PHASE 1: GRUNDLEGENDE CHECKS
+    # ================================
+    startup_logger = logging.getLogger("startup")
+    startup_logger.info("=" * 60)
+    startup_logger.info("🚀 PHASE 1: GRUNDLEGENDE VALIDIERUNG")
+    startup_logger.info("=" * 60)
     
-    # Bot Token prüfen
-    log_startup_step(1, 4, "Überprüfe Umgebungsvariablen")
+    log_startup_step("[1/3] Überprüfe Umgebungsvariablen")
     token = os.getenv('DISCORD_TOKEN')
     if not token:
-        progress.error("DISCORD_TOKEN nicht in Umgebungsvariablen gefunden!")
+        logging.error("❌ FATAL: DISCORD_TOKEN nicht in Umgebungsvariablen gefunden!")
         sys.exit(1)
-    progress.success("Bot-Token gefunden und validiert")
+    log_startup_step("✅ Bot-Token validiert")
     
-    # Bot erstellen und starten
-    log_startup_step(2, 4, "Erstelle Bot-Instanz")
-    bot = PixelBot()
-    progress.success("Bot-Instanz erfolgreich erstellt")
+    log_startup_step("[2/3] Überprüfe Python-Umgebung")
+    log_startup_step(f"✅ Python {sys.version.split()[0]} | OS: {os.name}")
+    
+    log_startup_step("[3/3] Erstelle Bot-Instanz")
+    try:
+        bot = PixelBot()
+        log_startup_step("✅ Bot-Instanz erfolgreich erstellt")
+    except Exception as e:
+        logging.error(f"❌ FATAL: Fehler bei Bot-Erstellung: {e}")
+        sys.exit(1)
+    
+    startup_logger.info("✅ PHASE 1 ABGESCHLOSSEN - Starte Bot-Verbindung\n")
+    
+    # ================================  
+    # 🔗 PHASE 2: DISCORD-VERBINDUNG
+    # ================================
+    # Ab hier übernimmt setup_hook() und on_ready()
     
     try:
-        log_startup_step(3, 4, "Starte Bot-Verbindung zu Discord")
+        # Bot startet und läuft permanent bis manuell gestoppt
         await bot.start(token)
     except KeyboardInterrupt:
-        progress.warning("Bot wurde durch Benutzer gestoppt (Ctrl+C)")
-        logging.info("🛑 Bot wird heruntergefahren...")
+        logging.warning("⚠️ Bot wurde durch Benutzer gestoppt (Ctrl+C)")
+        logging.info("🛑 Starte sauberes Herunterfahren...")
+    except discord.LoginFailure:
+        logging.error("❌ FATAL: Login fehlgeschlagen - Token ungültig!")
+    except discord.HTTPException as e:
+        logging.error(f"❌ FATAL: Discord HTTP Fehler: {e}")
     except Exception as e:
-        progress.error(f"Unerwarteter Fehler beim Bot-Start: {e}")
-        logging.exception("💥 Kritischer Fehler:")
+        logging.error(f"❌ FATAL: Unerwarteter Fehler: {e}")
+        logging.exception("💥 Stack Trace:")
     finally:
         if 'bot' in locals():
-            log_startup_step(4, 4, "Schließe Bot-Verbindung sauber")
+            # ================================
+            # 🔌 PHASE 5: SAUBERES HERUNTERFAHREN  
+            # ================================
+            startup_logger.info("=" * 60)
+            startup_logger.info("🔌 PHASE 5: SAUBERES HERUNTERFAHREN")
+            startup_logger.info("=" * 60)
             
-            # Datenbank und Cache sauber schließen
             try:
                 from .core.database import db
                 from .core.cache import cache
+                log_startup_step("[1/2] Schließe Datenbank und Cache")
                 await db.disconnect()
                 await cache.disconnect()
-                logging.info("🔌 Datenbank und Cache Verbindungen geschlossen")
+                log_startup_step("✅ Verbindungen geschlossen")
             except Exception as e:
                 logging.error(f"❌ Fehler beim Schließen der Verbindungen: {e}")
             
+            log_startup_step("[2/2] Schließe Bot-Verbindung")
             await bot.close()
-            progress.success("Bot sauber heruntergefahren")
-        progress.end_section(success=True)
+            log_startup_step("✅ Bot sauber heruntergefahren")
+            
+            startup_logger.info("🏁 SHUTDOWN ABGESCHLOSSEN")
+            startup_logger.info("=" * 60)
 
 if __name__ == "__main__":
     asyncio.run(main())
