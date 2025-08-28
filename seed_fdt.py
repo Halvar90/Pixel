@@ -6,8 +6,8 @@ Dieses Script lädt vordefinierte Fragen in die PostgreSQL-Datenbank.
 import asyncio
 import os
 from dotenv import load_dotenv
-from database import get_db_connection
-from lifecycle import log_success, log_error, log_database_action
+from database import get_pool
+from lifecycle import log_success, log_error
 
 # HIER DEINE 365 FRAGEN EINTRAGEN
 FDT_QUESTIONS_LIST = [
@@ -602,30 +602,26 @@ FDT_QUESTIONS_LIST = [
 async def seed_questions():
     """Verbindet sich mit der DB und fügt die Fragen aus der Liste hinzu."""
     load_dotenv()
-    conn = None
     try:
-        log_database_action("Starting FdT questions seeding", "fdt_questions")
-        conn = await get_db_connection()
-        log_success("Successfully connected to database. Starting seeding...")
+        print("🚀 Starting FdT questions seeding...")
+        pool = await get_pool()
+        print("✅ Successfully connected to database. Starting seeding...")
         
         inserted_count = 0
-        for question_text in FDT_QUESTIONS_LIST:
-            exists = await conn.fetchrow("SELECT 1 FROM fdt_questions WHERE question_text = $1", question_text)
-            if not exists:
-                await conn.execute("INSERT INTO fdt_questions (question_text) VALUES ($1)", question_text)
-                inserted_count += 1
-                if inserted_count % 10 == 0:
-                    log_database_action(f"Progress: {inserted_count} questions inserted", "fdt_questions")
-        
-        total_questions = await conn.fetchval("SELECT COUNT(*) FROM fdt_questions")
-        log_success(f"Seeding completed! {inserted_count} new questions added. Total: {total_questions}")
+        async with pool.acquire() as conn:
+            for question_text in FDT_QUESTIONS_LIST:
+                exists = await conn.fetchrow("SELECT 1 FROM fdt_questions WHERE question_text = $1", question_text)
+                if not exists:
+                    await conn.execute("INSERT INTO fdt_questions (question_text) VALUES ($1)", question_text)
+                    inserted_count += 1
+                    if inserted_count % 10 == 0:
+                        print(f"📊 Progress: {inserted_count} questions inserted")
+            
+            total_questions = await conn.fetchval("SELECT COUNT(*) FROM fdt_questions")
+            log_success(f"Seeding completed! {inserted_count} new questions added. Total: {total_questions}")
 
     except Exception as e:
         log_error("FdT seeding failed", str(e))
-    finally:
-        if conn:
-            await conn.close()
-            log_database_action("Database connection closed", "CONNECTION")
 
 if __name__ == "__main__":
     print("🌱 Starting FdT Questions Seeding...")
