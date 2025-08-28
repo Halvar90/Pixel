@@ -1,10 +1,13 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
-from database import get_pool
+from database import get_pool, set_channel_setting, get_channel_setting, get_fdt_channel_id, get_main_chat_channel_id
 
 # Erstelle eine Befehlsgruppe für die FdT-Admin-Befehle
 fdt_admin_group = app_commands.Group(name="fdt-admin", description="Admin-Befehle für die Frage des Tages.")
+
+# Erstelle eine Befehlsgruppe für Channel-Management
+channel_group = app_commands.Group(name="channel", description="Channel-Konfiguration für den Bot.")
 
 @fdt_admin_group.command(name="add", description="Fügt eine neue Frage des Tages hinzu.")
 @app_commands.checks.has_permissions(administrator=True)
@@ -202,12 +205,108 @@ async def fdt_reset_questions(interaction: discord.Interaction):
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
+# Channel Management Commands
+@channel_group.command(name="set", description="Setzt einen Channel für Bot-Funktionen.")
+@app_commands.checks.has_permissions(administrator=True)
+@app_commands.describe(
+    channel_type="Typ des Channels (fdt oder main)",
+    channel="Der Channel, der gesetzt werden soll"
+)
+@app_commands.choices(channel_type=[
+    app_commands.Choice(name="FdT Channel (für tägliche Fragen)", value="fdt"),
+    app_commands.Choice(name="Main Chat (für Benachrichtigungen)", value="main")
+])
+async def channel_set(interaction: discord.Interaction, channel_type: str, channel: discord.TextChannel):
+    """Setzt einen Channel für Bot-Funktionen."""
+    
+    if channel_type == "fdt":
+        setting_key = "fdt_channel_id"
+        description = "Channel for daily questions"
+        friendly_name = "FdT Channel"
+    elif channel_type == "main":
+        setting_key = "main_chat_channel_id" 
+        description = "Channel for notifications"
+        friendly_name = "Main Chat Channel"
+    else:
+        await interaction.response.send_message("❌ Ungültiger Channel-Typ!", ephemeral=True)
+        return
+    
+    success = await set_channel_setting(setting_key, channel.id, description)
+    
+    if success:
+        embed = discord.Embed(
+            title="✅ Channel gesetzt",
+            description=f"**{friendly_name}** wurde auf {channel.mention} gesetzt.",
+            color=discord.Color.green()
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+    else:
+        await interaction.response.send_message("❌ Fehler beim Setzen des Channels!", ephemeral=True)
+
+@channel_group.command(name="show", description="Zeigt die aktuell konfigurierten Channels an.")
+@app_commands.checks.has_permissions(administrator=True)
+async def channel_show(interaction: discord.Interaction):
+    """Zeigt die aktuell konfigurierten Channels an."""
+    
+    fdt_channel_id = await get_fdt_channel_id()
+    main_chat_channel_id = await get_main_chat_channel_id()
+    
+    embed = discord.Embed(
+        title="📺 Channel-Konfiguration",
+        color=discord.Color.blue()
+    )
+    
+    # FdT Channel
+    if fdt_channel_id:
+        fdt_channel = interaction.client.get_channel(fdt_channel_id)
+        if fdt_channel:
+            embed.add_field(
+                name="❓ FdT Channel", 
+                value=f"{fdt_channel.mention}\n`ID: {fdt_channel_id}`", 
+                inline=False
+            )
+        else:
+            embed.add_field(
+                name="❓ FdT Channel", 
+                value=f"⚠️ Channel nicht gefunden\n`ID: {fdt_channel_id}`", 
+                inline=False
+            )
+    else:
+        embed.add_field(name="❓ FdT Channel", value="❌ Nicht konfiguriert", inline=False)
+    
+    # Main Chat Channel
+    if main_chat_channel_id:
+        main_channel = interaction.client.get_channel(main_chat_channel_id)
+        if main_channel:
+            embed.add_field(
+                name="📢 Main Chat Channel", 
+                value=f"{main_channel.mention}\n`ID: {main_chat_channel_id}`", 
+                inline=False
+            )
+        else:
+            embed.add_field(
+                name="📢 Main Chat Channel", 
+                value=f"⚠️ Channel nicht gefunden\n`ID: {main_chat_channel_id}`", 
+                inline=False
+            )
+    else:
+        embed.add_field(name="📢 Main Chat Channel", value="❌ Nicht konfiguriert", inline=False)
+    
+    embed.add_field(
+        name="💡 Befehle",
+        value="`/channel set fdt #channel` - FdT Channel setzen\n`/channel set main #channel` - Main Chat setzen",
+        inline=False
+    )
+    
+    await interaction.response.send_message(embed=embed, ephemeral=True)
+
 class Admin(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
 async def setup(bot: commands.Bot):
-    # Fügt den Cog hinzu und registriert die Befehlsgruppe global
+    # Fügt den Cog hinzu und registriert die Befehlsgruppen global
     cog = Admin(bot)
     await bot.add_cog(cog)
     bot.tree.add_command(fdt_admin_group)
+    bot.tree.add_command(channel_group)

@@ -1,12 +1,8 @@
 import discord
 from discord.ext import commands, tasks
 import datetime
-from database import get_pool
+from database import get_pool, get_fdt_channel_id, get_main_chat_channel_id
 from lifecycle import log_fdt_action, log_error, log_success
-
-# Feste Channel-IDs für FdT-System
-FDT_CHANNEL_ID = 1410229292230508595  # FdT-Channel (feste ID)
-MAIN_CHAT_CHANNEL_ID = 1270678012341387268  # Hauptchat für Benachrichtigungen
 
 class MiniGames(commands.Cog):
     """Cog für die automatische Frage des Tages."""
@@ -34,15 +30,27 @@ class MiniGames(commands.Cog):
     async def daily_question_task(self):
         """Postet täglich eine neue Frage des Tages mit Thread und Cross-Channel-Benachrichtigung."""
         try:
-            fdt_channel = self.bot.get_channel(FDT_CHANNEL_ID)
-            main_channel = self.bot.get_channel(MAIN_CHAT_CHANNEL_ID)
+            # Get channel IDs from database
+            fdt_channel_id = await get_fdt_channel_id()
+            main_chat_channel_id = await get_main_chat_channel_id()
+            
+            if not fdt_channel_id:
+                print("❌ FdT-Channel nicht konfiguriert! Nutze `/channel set fdt <channel>`")
+                return
+            
+            if not main_chat_channel_id:
+                print("❌ Hauptchat-Channel nicht konfiguriert! Nutze `/channel set main <channel>`")
+                return
+            
+            fdt_channel = self.bot.get_channel(fdt_channel_id)
+            main_channel = self.bot.get_channel(main_chat_channel_id)
             
             if not fdt_channel:
-                print(f"❌ FdT-Kanal mit ID {FDT_CHANNEL_ID} nicht gefunden!")
+                print(f"❌ FdT-Kanal mit ID {fdt_channel_id} nicht gefunden!")
                 return
                 
             if not main_channel:
-                print(f"❌ Hauptchat-Kanal mit ID {MAIN_CHAT_CHANNEL_ID} nicht gefunden!")
+                print(f"❌ Hauptchat-Kanal mit ID {main_chat_channel_id} nicht gefunden!")
 
             pool = await get_pool()
             async with pool.acquire() as conn:
