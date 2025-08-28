@@ -105,8 +105,8 @@ class AdminCog(commands.Cog):
         
         await interaction.response.send_message(embed=embed, ephemeral=True)
     
-    @app_commands.command(name="bot_info", description="[ADMIN] Zeigt Bot-Informationen an")
-    async def bot_information(self, interaction: discord.Interaction):
+    @app_commands.command(name="info", description="[ADMIN] Zeigt Bot-Informationen an")
+    async def show_bot_info(self, interaction: discord.Interaction):
         """Zeigt Bot-Statistiken an."""
         embed = discord.Embed(
             title="🤖 Bot-Informationen",

@@ -75,10 +75,10 @@ class PixelBot(commands.Bot):
         """Wird ausgeführt, bevor der Bot sich zu Discord verbindet."""
         logging.info("🔧 Bot Setup wird gestartet...")
         
-        # Emoji Manager laden und synchronisieren
+        # Emoji Manager nur erstellen, aber noch nicht synchronisieren
+        # (Synchronisation passiert in on_ready wenn Guild-ID verfügbar ist)
         from .utils.emoji_manager import EmojiManager
         self.emoji_manager = EmojiManager(self)
-        await self.emoji_manager.load_and_sync_emojis()
         
         # Intelligente Systeme initialisieren
         try:
