@@ -21,6 +21,9 @@ class AdminCog(commands.Cog):
         """Synchronisiert alle Emojis neu."""
         await interaction.response.defer(ephemeral=True)
         
+        # Emoji-Manager über Bot-Instanz abrufen
+        emoji_manager = getattr(self.bot, 'emoji_manager', None)
+        
         if not emoji_manager:
             await interaction.followup.send("❌ Emoji-Manager ist nicht initialisiert!", ephemeral=True)
             return
@@ -30,8 +33,8 @@ class AdminCog(commands.Cog):
             emoji_count = len(emoji_manager.get_emoji_list())
             
             embed = discord.Embed(
-                title="🎭 Emoji-Synchronisation",
-                description=f"✅ Erfolgreich abgeschlossen!\n📊 **{emoji_count}** Emojis verfügbar",
+                title="Emoji-Synchronisation",
+                description=f"Erfolgreich abgeschlossen!\n**{emoji_count}** Emojis verfügbar",
                 color=discord.Color.green()
             )
             
@@ -39,8 +42,8 @@ class AdminCog(commands.Cog):
             
         except Exception as e:
             embed = discord.Embed(
-                title="🎭 Emoji-Synchronisation", 
-                description=f"❌ Fehler: {str(e)}",
+                title="Emoji-Synchronisation", 
+                description=f"Fehler: {str(e)}",
                 color=discord.Color.red()
             )
             await interaction.followup.send(embed=embed, ephemeral=True)
@@ -49,6 +52,9 @@ class AdminCog(commands.Cog):
     async def emoji_list(self, interaction: discord.Interaction):
         """Zeigt alle verfügbaren Emojis an."""
         await interaction.response.defer(ephemeral=True)
+        
+        # Emoji-Manager über Bot-Instanz abrufen
+        emoji_manager = getattr(self.bot, 'emoji_manager', None)
         
         if not emoji_manager:
             await interaction.followup.send("❌ Emoji-Manager ist nicht initialisiert!", ephemeral=True)
@@ -70,8 +76,8 @@ class AdminCog(commands.Cog):
             categories[category].append(name)
         
         embed = discord.Embed(
-            title="🎭 Verfügbare Bot-Emojis",
-            description=f"📊 Insgesamt **{len(emoji_names)}** Emojis",
+            title="Verfügbare Bot-Emojis",
+            description=f"Insgesamt **{len(emoji_names)}** Emojis",
             color=discord.Color.blue()
         )
         
@@ -85,7 +91,7 @@ class AdminCog(commands.Cog):
                 emoji_display.append(f"... und {len(names) - 10} weitere")
             
             embed.add_field(
-                name=f"📁 {category.title()} ({len(names)})",
+                name=f"{category.title()} ({len(names)})",
                 value="\n".join(emoji_display) if emoji_display else "Keine",
                 inline=False
             )
@@ -98,7 +104,7 @@ class AdminCog(commands.Cog):
         emoji_str = get_emoji(emoji_name)
         
         embed = discord.Embed(
-            title="🧪 Emoji-Test",
+            title="Emoji-Test",
             description=f"**Name:** `{emoji_name}`\n**Output:** {emoji_str}",
             color=discord.Color.yellow()
         )
@@ -108,20 +114,23 @@ class AdminCog(commands.Cog):
     @app_commands.command(name="info", description="[ADMIN] Zeigt Bot-Informationen an")
     async def show_bot_info(self, interaction: discord.Interaction):
         """Zeigt Bot-Statistiken an."""
+        # Emoji-Manager über Bot-Instanz abrufen
+        emoji_manager = getattr(self.bot, 'emoji_manager', None)
+        
         embed = discord.Embed(
-            title="🤖 Bot-Informationen",
+            title="Bot-Informationen",
             color=discord.Color.blue()
         )
         
         # Grundlegende Stats
-        embed.add_field(name="🏠 Server", value=len(self.bot.guilds), inline=True)
-        embed.add_field(name="👥 User", value=len(self.bot.users), inline=True)
-        embed.add_field(name="⚡ Latenz", value=f"{round(self.bot.latency * 1000)}ms", inline=True)
+        embed.add_field(name="Server", value=len(self.bot.guilds), inline=True)
+        embed.add_field(name="User", value=len(self.bot.users), inline=True)
+        embed.add_field(name="Latenz", value=f"{round(self.bot.latency * 1000)}ms", inline=True)
         
         # Emoji Stats
         if emoji_manager:
             emoji_count = len(emoji_manager.get_emoji_list())
-            embed.add_field(name="🎭 Emojis", value=emoji_count, inline=True)
+            embed.add_field(name="Emojis", value=emoji_count, inline=True)
         
         # Cog Stats
         embed.add_field(name="🔧 Cogs", value=len(self.bot.cogs), inline=True)

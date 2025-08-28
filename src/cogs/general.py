@@ -27,30 +27,20 @@ class GeneralCog(commands.Cog):
     
     @app_commands.command(name="help", description="Zeigt alle verfügbaren Commands an")
     async def help(self, interaction: discord.Interaction):
-        """Hilfe-Command mit Emoji-Showcase."""
+        """Hilfe-Command mit aktuellen Commands."""
         embed = discord.Embed(
-            title=f"{get_emoji('pixel')} Pixel Bot - Hilfe",
-            description="🌟 Willkommen im magischen Hain! Hier sind alle verfügbaren Commands:",
+            title="Pixel Bot - Hilfe",
+            description="Hier sind alle verfügbaren Commands:",
             color=discord.Color.blue()
         )
         
         # Allgemeine Commands
         embed.add_field(
             name="🎮 Allgemein",
-            value=f"""
-            {get_emoji('mana')} `/ping` - Bot-Latenz prüfen
-            {get_emoji('pixel')} `/help` - Diese Hilfe anzeigen
-            """,
-            inline=False
-        )
-        
-        # Spieler Commands
-        embed.add_field(
-            name="👤 Spieler",
-            value=f"""
-            `/profil` - Dein Spielerprofil anzeigen
-            `/erkunden` - Den Hain erkunden
-            `/minigame` - Ein schnelles Minispiel spielen
+            value="""
+            `/ping` - Bot-Latenz prüfen
+            `/help` - Diese Hilfe anzeigen
+            `/status` - Bot-Status anzeigen
             """,
             inline=False
         )
@@ -62,14 +52,10 @@ class GeneralCog(commands.Cog):
                 value="""
                 `/emoji_sync` - Emojis synchronisieren
                 `/emoji_list` - Alle Emojis anzeigen
-                `/bot_info` - Bot-Informationen
+                `/info` - Bot-Informationen
                 """,
                 inline=False
             )
-        
-        embed.set_footer(
-            text=f"Bot erstellt von Halvar90 • {datetime.now().strftime('%Y')}"
-        )
         
         await interaction.response.send_message(embed=embed)
     
@@ -77,7 +63,7 @@ class GeneralCog(commands.Cog):
     async def status(self, interaction: discord.Interaction):
         """Bot-Status Command."""
         embed = discord.Embed(
-            title=f"{get_emoji('pixel')} Bot-Status",
+            title="Bot-Status",
             color=discord.Color.green()
         )
         
@@ -85,28 +71,27 @@ class GeneralCog(commands.Cog):
         embed.add_field(
             name="📊 Statistiken",
             value=f"""
-            🏠 **Server:** {len(self.bot.guilds)}
-            👥 **User:** {len(self.bot.users)}
-            ⚡ **Latenz:** {round(self.bot.latency * 1000)}ms
+            **Server:** {len(self.bot.guilds)}
+            **User:** {len(self.bot.users)}
+            **Latenz:** {round(self.bot.latency * 1000)}ms
             """,
             inline=True
         )
         
         # Emoji-Informationen
-        from ..utils.emoji_manager import emoji_manager
+        emoji_manager = getattr(self.bot, 'emoji_manager', None)
         if emoji_manager:
             emoji_count = len(emoji_manager.get_emoji_list())
             embed.add_field(
                 name="🎭 Emojis",
                 value=f"""
-                📦 **Verfügbar:** {emoji_count}
-                ✅ **Status:** Online
+                **Verfügbar:** {emoji_count}
+                **Status:** Online
                 """,
                 inline=True
             )
         
         embed.set_thumbnail(url=self.bot.user.display_avatar.url)
-        embed.timestamp = datetime.now()
         
         await interaction.response.send_message(embed=embed)
 
