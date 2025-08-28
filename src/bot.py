@@ -58,6 +58,24 @@ class PixelBot(commands.Bot):
         """Wird ausgeführt, bevor der Bot sich zu Discord verbindet."""
         logging.info("🔧 Bot Setup wird gestartet...")
         
+        # Emoji Manager laden und synchronisieren
+        from .utils.emoji_manager import EmojiManager
+        self.emoji_manager = EmojiManager(self)
+        await self.emoji_manager.load_and_sync_emojis()
+        
+        # Intelligente Systeme initialisieren
+        try:
+            from .systems import setup_systems_for_bot
+            database_url = os.getenv('DATABASE_URL')
+            
+            if database_url:
+                system_status = await setup_systems_for_bot(self, database_url)
+                logging.info(f"📊 System Status: {system_status.get('overall_success', False)}")
+            else:
+                logging.warning("⚠️ DATABASE_URL nicht gefunden - Systeme ohne DB gestartet")
+        except Exception as e:
+            logging.error(f"❌ Fehler bei intelligenten Systemen: {e}")
+        
         # Cogs laden
         await self._load_cogs()
         
@@ -76,10 +94,19 @@ class PixelBot(commands.Bot):
         else:
             logging.warning("⚠️ MAIN_GUILD_ID nicht gesetzt. Emoji-Manager wird nicht initialisiert.")
         
-        # Slash Commands synchronisieren
+        # Slash Commands synchronisieren (intelligentes System nutzen wenn verfügbar)
         try:
-            synced = await self.tree.sync()
-            logging.info(f"🔄 {len(synced)} Slash Commands synchronisiert")
+            if hasattr(self, 'command_registration'):
+                # Intelligentes Command Registration System nutzen
+                sync_result = await self.command_registration.intelligent_sync()
+                if sync_result["success"]:
+                    logging.info(f"🧠 Intelligenter Sync: {sync_result['commands_synced']} Commands")
+                else:
+                    logging.info(f"🔄 Command-Sync: {sync_result['message']}")
+            else:
+                # Fallback auf normalen Sync
+                synced = await self.tree.sync()
+                logging.info(f"🔄 {len(synced)} Slash Commands synchronisiert")
         except Exception as e:
             logging.error(f"❌ Fehler beim Synchronisieren der Slash Commands: {e}")
         

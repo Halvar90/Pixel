@@ -4,3 +4,11 @@ redis>=5.0.0
 python-dotenv>=1.0.0
 psutil>=5.8.0
 aiofiles>=23.0.0
+
+# Database Migration System
+SQLAlchemy>=2.0.0
+alembic>=1.12.0
+
+# Additional Dependencies
+coloredlogs>=15.0
+aiohttp>=3.8.0
