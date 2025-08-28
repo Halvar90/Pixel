@@ -1,200 +1,92 @@
-# Pixel Discord Bot 🎮
+# Pixel - Simple Question of the Day Bot
 
-Ein hochoptimierter, modular aufgebauter Discord-Bot mit PostgreSQL-Datenbankunterstützung, speziell optimiert für Railway-Hosting.
+Ein minimalistischer Discord Bot für automatische tägliche Fragen mit Thread-Diskussionen.
 
-## 🚀 Railway-Optimierungen
+## 🎯 **Wie es funktioniert**
 
-- **Automatische Datenbankverbindung**: Nutzt Railway's `DATABASE_URL`
-- **Graceful Shutdown**: Behandelt SIGTERM/SIGINT Signale korrekt
-- **Retry-Logik**: Robuste Datenbankverbindung mit exponential backoff
-- **Umfassendes Logging**: Strukturierte Logs für Railway-Monitoring
-- **Connection Pooling**: Optimierte Datenbankperformance
-- **Health Checks**: `/status` Command für Monitoring
+1. **Täglich um 9:00 Uhr** postet der Bot eine neue Frage im FdT-Channel
+2. **Automatisch** wird ein Thread zur Frage erstellt
+3. **Im Hauptchat** erscheint eine kurze Benachrichtigung mit Link zur Frage
+4. **User klicken den Link**, sehen die Frage und können direkt im Thread antworten
+5. **Keine Commands nötig** - alles läuft automatisch!
 
-## 🤖 Bot-Informationen
+## 📋 **Features**
 
-- **Client ID**: 1410207945257390131
-- **Application ID**: 1410207945257390131
-- **Repository**: https://github.com/Halvar90/Pixel
+### **🤖 Vollautomatisch**
+- **Tägliche Posts:** Jeden Tag um 9:00 Uhr eine neue Frage
+- **Thread-Erstellung:** Automatischer Thread für Diskussionen  
+- **Cross-Channel-Info:** Kurze Benachrichtigung im Hauptchat mit Link
+- **400+ Fragen:** Umfangreicher Pool ohne Wiederholung
 
-## Lokale Entwicklung
+### **💬 Einfache Bedienung**
+- **Für User:** Einfach auf Link klicken und im Thread antworten
+- **Keine Commands:** User brauchen nichts zu tippen
+- **Automatische Navigation:** Link führt direkt zur Frage + Thread
 
-### Voraussetzungen
-- Python 3.13.7
-- PostgreSQL-Datenbank
+## 🔧 **Channel-Konfiguration**
 
-### Installation
+- **FdT-Channel:** `1410229292230508595` (hier werden Fragen gepostet)
+- **Hauptchat:** `1270678012341387268` (hier kommen die Benachrichtigungen)
 
-1. Repository klonen:
-```bash
-git clone https://github.com/Halvar90/Pixel.git
-cd Pixel
+## 🗃️ **Datenbank**
+
+Verwendet PostgreSQL mit einer simplen Struktur:
+
+```sql
+CREATE TABLE fdt_questions (
+    question_id SERIAL PRIMARY KEY,
+    question_text TEXT NOT NULL,
+    used_at TIMESTAMP NULL
+);
 ```
 
-2. Virtuelle Umgebung erstellen und aktivieren:
-```bash
-python -m venv .venv
-# Windows:
-.venv\Scripts\activate
-# macOS/Linux:
-source .venv/bin/activate
-```
+## 🚀 **Deployment**
 
-3. Abhängigkeiten installieren:
-```bash
-pip install -r requirements.txt
-```
+### **Railway Platform**
+- PostgreSQL Database
+- Automatisches Seeding mit 400+ Fragen
+- 24/7 Verfügbarkeit mit Auto-Restart
 
-4. Umgebungsvariablen konfigurieren:
-Erstelle eine `.env` Datei im Projektverzeichnis mit:
-```
-DISCORD_BOT_TOKEN="DEIN_BOT_TOKEN"
-POSTGRES_USER="DEIN_DB_BENUTZER"
-POSTGRES_PASSWORD="DEIN_DB_PASSWORT"
-POSTGRES_DB="pixel_bot_db"
-POSTGRES_HOST="localhost"
-POSTGRES_PORT="5432"
-```
+### **Admin-Commands**
+- `trigger_fdt` - Manueller Test-Trigger (nur für Admins)
 
-5. Bot starten:
-```bash
-python bot.py
-```
-
-## 🛠️ Railway Deployment (Empfohlen)
-
-### Schritt 1: Repository ist bereits verbunden ✅
-- GitHub Repository: `https://github.com/Halvar90/Pixel`
-
-### Schritt 2: Railway Projekt erstellen
-1. Gehe zu [Railway.app](https://railway.app)
-2. **"New Project"** → **"Deploy from GitHub repo"**
-3. Wähle: **`Halvar90/Pixel`**
-4. Railway erkennt automatisch Python und verwendet die `railway.json` Konfiguration
-
-### Schritt 3: PostgreSQL-Datenbank hinzufügen
-1. Im Railway Dashboard: **"Add Service"** → **"Database"** → **"PostgreSQL"**
-2. Railway setzt automatisch die `DATABASE_URL` Environment Variable
-
-### Schritt 4: Discord Bot Token setzen
-
-#### Option A: Railway CLI (Empfohlen)
-```bash
-# Railway CLI installieren
-npm install -g @railway/cli
-
-# Login und Projekt verknüpfen
-railway login
-railway link
-
-# Discord Bot Token setzen
-railway variables set DISCORD_BOT_TOKEN="YOUR_DISCORD_BOT_TOKEN_HERE"
-```
-
-#### Option B: Railway Web Interface
-1. Gehe zu deinem Railway Projekt
-2. **"Variables"** Tab
-3. Füge hinzu: `DISCORD_BOT_TOKEN` = `YOUR_DISCORD_BOT_TOKEN_HERE`
-
-### Schritt 5: Deployment überwachen
-- Railway deployed automatisch bei jedem Git Push
-- Logs sind im Railway Dashboard verfügbar
-- Nutze `/status` Command im Discord für Health Checks
-
-## Projektstruktur
+## 📁 **Projektstruktur**
 
 ```
-pixel-bot/
-├── cogs/                   # Bot-Module
-│   ├── __init__.py
-│   └── general.py         # Allgemeine Befehle
-├── .env                   # Lokale Umgebungsvariablen
-├── .gitignore            # Git-Ignorierungsdatei
-├── bot.py                # Haupt-Bot-Datei
-├── database.py           # Datenbankverbindung und -setup
-├── Procfile              # Railway-Deployment-Konfiguration
-├── requirements.txt      # Python-Abhängigkeiten
-├── runtime.txt          # Python-Version für Railway
+Pixel/
+├── bot.py                 # Haupt-Bot
+├── database.py            # PostgreSQL Verbindung
+├── lifecycle.py          # Logging
+├── seed_fdt.py           # 400+ Fragen für die Datenbank
+├── cogs/
+│   ├── minigames.py      # FdT-Automation
+│   ├── admin.py          # Admin-Tools
+│   └── general.py        # Basic Bot-Commands
 └── README.md            # Diese Datei
 ```
 
-## Datenbank-Schema
+## 🎮 **User Experience**
 
-### Tabellen:
-- **players**: Globale Spielerdaten (user_id, pixel_balance, global_upgrades)
-- **worlds**: Verfügbare Spielwelten
-- **player_world_progress**: Spieler-Fortschritt in verschiedenen Welten
-- **creatures**: Kreaturen, die Spieler besitzen
+### **Täglicher Ablauf:**
+1. **9:00 Uhr:** Bot postet Frage im FdT-Channel + Thread
+2. **Hauptchat:** "📢 Neue Frage des Tages! [Link]"
+3. **User:** Klickt Link → sieht Frage → antwortet im Thread
+4. **Fertig!** Keine weiteren Schritte nötig
 
-## 📋 Verfügbare Befehle
+### **Automatische Features:**
+- ✅ Thread wird automatisch erstellt
+- ✅ Willkommensnachricht im Thread
+- ✅ Reaktionen auf Frage-Post
+- ✅ 24h Auto-Archive für Thread
+- ✅ Kein Spam - nur 1 Benachrichtigung pro Tag
 
-### 🏓 General Commands
-- `/ping` - Zeigt Bot-Latenz und Uptime
-- `/status` - Detaillierte Bot-Status-Informationen für Monitoring
-- `/help` - Hilfe und Bot-Informationen
+## 🔧 **Technisch**
 
-### 🔧 Monitoring Features
-- Health Check über `/status` Command
-- Strukturierte Logs für Railway
-- Automatische Reconnection bei Datenbankfehlern
-- Graceful Shutdown für Railway Deployments
+- **Discord.py 2.6.2:** Moderne Discord API
+- **PostgreSQL + asyncpg:** Async Datenbank
+- **Railway Hosting:** Cloud-Deployment
+- **Graceful Shutdown:** Sauberes Beenden
 
-## 🏗️ Entwicklung
+---
 
-### Lokale Entwicklung
-```bash
-# Virtual Environment aktivieren
-.venv\Scripts\activate  # Windows
-source .venv/bin/activate  # macOS/Linux
-
-# Bot lokal starten
-python bot.py
-```
-
-### Neue Cogs hinzufügen
-1. Erstelle eine neue `.py` Datei in `cogs/`
-2. Implementiere die Cog-Klasse
-3. Füge die `setup()` Funktion hinzu
-4. Der Bot lädt automatisch alle Cogs beim Start
-
-### Datenbank erweitern
-Erweitere die `init_db()` Funktion in `database.py` um neue Tabellen oder Spalten.
-
-## 🎨 Erweiterte Logging Features
-
-### � Visuell ansprechende Railway-Logs
-- **Emoji-basierte Log-Kategorien** für bessere Übersichtlichkeit
-- **Strukturierte Nachrichten** ohne Timestamps (Railway zeigt diese bereits)
-- **Farbkodierte Events** durch Emoji-System
-- **Event-Speicher** für Diagnose-APIs
-
-### 🔍 Log-Kategorien
-
-| Emoji | Kategorie | Beschreibung |
-|-------|-----------|-------------|
-| 🤖 | Bot Events | Bot-spezifische Ereignisse |
-| 👤 | User Actions | Benutzeraktionen |
-| 🎮 | Game Actions | Spieler-spezifische Aktionen |
-| 💰 | Economy | Pixel-Wirtschaft Events |
-| 🌍 | World Actions | Welt-bezogene Aktionen |
-| 🐾 | Creatures | Kreatur-Events |
-| 🗄️ | Database | Datenbankoperationen |
-| ⚙️ | System | System-Events |
-| 🚂 | Railway | Railway-spezifische Events |
-| ⚡ | Commands | Command-Nutzung |
-| 🔗 | Connections | Verbindungsstatus |
-| ✅ | Success | Erfolgreiche Operationen |
-| ❌ | Errors | Fehler und Probleme |
-| ⚠️ | Warnings | Warnungen |
-| 🚀 | Startup | Initialisierung |
-
-### 📋 Beispiel-Logs
-```
-🚀 Startup: Initializing Pixel Bot
-🔗 Connection to PostgreSQL: Connected successfully
-🤖 Bot Event: Bot successfully logged in - User: PixelBot#1234
-⚡ Command 'ping' used by 'User#1234' in 'TestServer' - Latency: 45ms
-💰 Economy: pixel_earned for 'Player123' - 50 pixels (quest_completed)
-🌍 World 'Forest': player_entered by 'Player123'
-✅ SUCCESS: Database initialization completed - All tables created/verified
-```
+*Einfach, automatisch, effektiv - Question of the Day ohne Komplikationen! 🎯*

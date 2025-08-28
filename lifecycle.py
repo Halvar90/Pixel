@@ -82,6 +82,35 @@ def log_creature_action(action: str, creature: str, owner: str, details: str = "
         message += f" ({details})"
     log_story("🐾", message)
 
+def log_fdt_action(action: str, details: str = "", user: str = ""):
+    """Loggt Frage des Tages (FdT) Aktionen"""
+    message = f"FdT: {action}"
+    if user:
+        message += f" by '{user}'"
+    if details:
+        message += f" - {details}"
+    log_story("❓", message)
+
+def log_fdt_question(action: str, question_id: int = None, user: str = "", details: str = ""):
+    """Loggt FdT-Fragen-spezifische Aktionen"""
+    message = f"FdT Question: {action}"
+    if question_id:
+        message += f" (ID: {question_id})"
+    if user:
+        message += f" by '{user}'"
+    if details:
+        message += f" - {details}"
+    log_story("❔", message)
+
+def log_fdt_answer(action: str, user: str, question_id: int = None, details: str = ""):
+    """Loggt FdT-Antworten-spezifische Aktionen"""
+    message = f"FdT Answer: {action} by '{user}'"
+    if question_id:
+        message += f" (Q:{question_id})"
+    if details:
+        message += f" - {details}"
+    log_story("💬", message)
+
 def log_database_action(action: str, table: str, details: str = ""):
     """Loggt Datenbankaktionen"""
     message = f"DB {action} in {table}"
@@ -160,3 +189,68 @@ def log_connection(service: str, status: str, details: str = ""):
         log_story("💔", message)
     else:
         log_story("🔄", message)
+
+def log_pixel_economy(action: str, username: str, amount: int = 0, details: str = ""):
+    """Logge Pixel-Wirtschaftsaktivitäten: verdienen, ausgeben, übertragen."""
+    if action == "pixel_earned":
+        icon = "💰"
+    elif action == "pixel_spent":
+        icon = "💸"
+    elif action == "pixel_sent":
+        icon = "📤"
+    elif action == "pixel_received":
+        icon = "📥"
+    else:
+        icon = "💱"
+    
+    message = f"{icon} {action.replace('_', ' ').title()}: {username}"
+    if amount > 0:
+        message += f" | Amount: {amount:,} Pixel"
+    if details:
+        message += f" | {details}"
+    
+    log_story(message)
+
+def log_player_action(action: str, username: str, details: str = ""):
+    """Logge Spieler-Management-Aktionen."""
+    if action == "profile_viewed":
+        icon = "👤"
+    elif action == "leaderboard_viewed":
+        icon = "🏆"
+    elif action == "player_registered":
+        icon = "📝"
+    elif action == "achievement_unlocked":
+        icon = "🏅"
+    elif action == "daily_bonus_claimed":
+        icon = "🎁"
+    else:
+        icon = "🎮"
+    
+    message = f"{icon} Player: {username} | {action.replace('_', ' ').title()}"
+    if details:
+        message += f" | {details}"
+    
+    log_story(message)
+
+def log_reward_system(action: str, username: str, reward_type: str = "", amount: int = 0, details: str = ""):
+    """Logge Belohnungssystem-Aktivitäten."""
+    if "bonus" in action:
+        icon = "🎁"
+    elif "achievement" in action:
+        icon = "🏅"
+    elif "streak" in action:
+        icon = "🔥"
+    elif "transfer" in action:
+        icon = "↔️"
+    else:
+        icon = "⭐"
+    
+    message = f"{icon} Reward: {username} | {action.replace('_', ' ').title()}"
+    if reward_type:
+        message += f" | Type: {reward_type}"
+    if amount > 0:
+        message += f" | Amount: {amount:,}"
+    if details:
+        message += f" | {details}"
+    
+    log_story(message)

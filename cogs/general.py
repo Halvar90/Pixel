@@ -86,13 +86,19 @@ class General(commands.Cog):
         """Custom help command."""
         embed = discord.Embed(
             title="🎮 Pixel Bot - Help",
-            description="Welcome to Pixel Bot! A modular Discord bot for gaming adventures.",
+            description="Welcome to Pixel Bot! A simple Discord bot for daily Question of the Day posts.",
             color=discord.Color.purple()
         )
         
         embed.add_field(
             name="🏓 General Commands",
             value="`/ping` - Check bot latency\n`/status` - Detailed bot status\n`/help` - This help message",
+            inline=False
+        )
+        
+        embed.add_field(
+            name="💬 Question of the Day",
+            value="Get notified in the main chat when a new question is posted!\nClick the link to see the question and discuss in the thread.",
             inline=False
         )
         

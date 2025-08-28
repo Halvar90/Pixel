@@ -4,7 +4,7 @@ import signal
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
-from database import init_db
+from database import init_db, close_pool
 from lifecycle import (
     setup_logging, log_bot_event, log_system_event, log_startup_step, 
     log_connection, log_error, log_success, log_command_usage, log_warning
@@ -46,6 +46,22 @@ class PixelBot(commands.Bot):
     async def setup_hook(self):
         """This is called when the bot is starting up."""
         log_startup_step("Running setup hook")
+        
+        # Initialize database
+        try:
+            log_startup_step("Initializing database")
+            await init_db()
+            log_success("Database initialized successfully")
+            
+            # Initialize connection pool
+            log_startup_step("Creating database connection pool")
+            from database import get_pool
+            self.pool = await get_pool()
+            log_success("Database connection pool created")
+            
+        except Exception as e:
+            log_error("Database initialization failed", str(e))
+            raise e
         
         # Load all cogs
         await self.load_cogs()
@@ -165,6 +181,11 @@ async def main():
         if not bot.is_closed():
             log_system_event("Closing bot connection")
             await bot.close()
+        
+        # Close database pool
+        log_system_event("Closing database connection pool")
+        await close_pool()
+        
         log_system_event("Bot shutdown complete")
 
 # Run the bot
