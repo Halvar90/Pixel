@@ -128,24 +128,32 @@ class EmojiManager:
         
         return None
     
-    def get_emoji(self, name: str) -> Optional[str]:
+    def get_emoji(self, name: str) -> str:
         """Gibt den Discord-Emoji-String für einen Namen zurück."""
-        emoji_name = self._sanitize_emoji_name(name.lower())
-        
-        if emoji_name in self.emoji_cache:
-            emoji = self.emoji_cache[emoji_name]
-            return f"<:{emoji.name}:{emoji.id}>"
-        
-        # Fallback zu Unicode-Emoji oder Text
-        fallback_emojis = {
-            "mana": "⚡",
-            "pixel": "💎",
-            "coins": "🪙",
-            "health": "❤️",
-            "unknown": "❓"
-        }
-        
-        return fallback_emojis.get(emoji_name, f":{name}:")
+        try:
+            emoji_name = self._sanitize_emoji_name(name.lower())
+            
+            if emoji_name in self.emoji_cache:
+                emoji = self.emoji_cache[emoji_name]
+                return f"<:{emoji.name}:{emoji.id}>"
+            
+            # Fallback zu Unicode-Emoji oder Text
+            fallback_emojis = {
+                "mana": "⚡",
+                "pixel": "💎", 
+                "coins": "🪙",
+                "health": "❤️",
+                "unknown": "❓",
+                "error": "❌",
+                "success": "✅",
+                "warning": "⚠️",
+                "info": "ℹ️"
+            }
+            
+            return fallback_emojis.get(emoji_name, f":{name}:")
+        except Exception as e:
+            logger.error(f"Fehler beim Abrufen von Emoji '{name}': {e}")
+            return f":{name}:"
     
     def get_emoji_list(self) -> List[str]:
         """Gibt eine Liste aller verfügbaren Emoji-Namen zurück."""
@@ -161,6 +169,25 @@ emoji_manager: Optional[EmojiManager] = None
 
 def get_emoji(name: str) -> str:
     """Hilfsfunktion für einfachen Zugriff auf Emojis."""
-    if emoji_manager:
-        return emoji_manager.get_emoji(name)
-    return f":{name}:"
+    try:
+        if emoji_manager and emoji_manager.guild_id:
+            result = emoji_manager.get_emoji(name)
+            return result if result else f":{name}:"
+        
+        # Fallback zu Unicode-Emojis wenn Manager nicht verfügbar
+        fallback_emojis = {
+            "mana": "⚡",
+            "pixel": "💎", 
+            "coins": "🪙",
+            "health": "❤️",
+            "unknown": "❓",
+            "error": "❌",
+            "success": "✅",
+            "warning": "⚠️",
+            "info": "ℹ️"
+        }
+        
+        return fallback_emojis.get(name.lower(), f":{name}:")
+    except Exception as e:
+        logger.error(f"Fehler in get_emoji('{name}'): {e}")
+        return f":{name}:"

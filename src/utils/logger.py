@@ -273,11 +273,17 @@ def get_system_logger(name):
 
 
 # Praktische Logging-Funktionen für häufige Anwendungsfälle
-def log_startup_step(step_num, total_steps, description):
-    """Loggt einen Startup-Schritt"""
+def log_startup_step(step_description, step_num=None, total_steps=None):
+    """Loggt einen Startup-Schritt - flexibel mit oder ohne Nummerierung"""
     logger = logging.getLogger("startup")
-    progress = f"[{step_num}/{total_steps}]"
-    logger.info(f"🚀 {progress} {description}")
+    
+    if step_num is not None and total_steps is not None:
+        # Alte Funktionalität: [x/y] Format
+        progress = f"[{step_num}/{total_steps}]"
+        logger.info(f"🚀 {progress} {step_description}")
+    else:
+        # Neue Funktionalität: Freier Text
+        logger.info(f"🚀 {step_description}")
 
 
 def log_cog_loading(cog_name, success=True, error=None):

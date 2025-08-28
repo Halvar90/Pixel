@@ -4,7 +4,7 @@ from discord.ext import commands
 from discord import app_commands
 from typing import Optional
 
-from ..utils.emoji_manager import emoji_manager, get_emoji
+from ..utils.emoji_manager import get_emoji
 
 class AdminCog(commands.Cog):
     """Admin-Commands für Bot-Verwaltung."""
@@ -16,13 +16,17 @@ class AdminCog(commands.Cog):
         """Überprüft, ob der User Admin-Rechte hat."""
         return ctx.author.guild_permissions.administrator
     
+    def _get_emoji_manager(self):
+        """Sichere Methode zum Abrufen des Emoji-Managers."""
+        return getattr(self.bot, 'emoji_manager', None)
+    
     @app_commands.command(name="emoji_sync", description="[ADMIN] Synchronisiert alle Emojis aus dem assets/emojis/ Ordner")
     async def emoji_sync(self, interaction: discord.Interaction):
         """Synchronisiert alle Emojis neu."""
         await interaction.response.defer(ephemeral=True)
         
         # Emoji-Manager über Bot-Instanz abrufen
-        emoji_manager = getattr(self.bot, 'emoji_manager', None)
+        emoji_manager = self._get_emoji_manager()
         
         if not emoji_manager:
             await interaction.followup.send("❌ Emoji-Manager ist nicht initialisiert!", ephemeral=True)
@@ -54,7 +58,7 @@ class AdminCog(commands.Cog):
         await interaction.response.defer(ephemeral=True)
         
         # Emoji-Manager über Bot-Instanz abrufen
-        emoji_manager = getattr(self.bot, 'emoji_manager', None)
+        emoji_manager = self._get_emoji_manager()
         
         if not emoji_manager:
             await interaction.followup.send("❌ Emoji-Manager ist nicht initialisiert!", ephemeral=True)
@@ -115,7 +119,7 @@ class AdminCog(commands.Cog):
     async def show_bot_info(self, interaction: discord.Interaction):
         """Zeigt Bot-Statistiken an."""
         # Emoji-Manager über Bot-Instanz abrufen
-        emoji_manager = getattr(self.bot, 'emoji_manager', None)
+        emoji_manager = self._get_emoji_manager()
         
         embed = discord.Embed(
             title="Bot-Informationen",

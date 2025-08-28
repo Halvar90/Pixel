@@ -80,16 +80,17 @@ class GeneralCog(commands.Cog):
         
         # Emoji-Informationen
         emoji_manager = getattr(self.bot, 'emoji_manager', None)
-        if emoji_manager:
+        if emoji_manager and emoji_manager.guild_id:
             emoji_count = len(emoji_manager.get_emoji_list())
-            embed.add_field(
-                name="🎭 Emojis",
-                value=f"""
-                **Verfügbar:** {emoji_count}
-                **Status:** Online
-                """,
-                inline=True
-            )
+            emoji_status = f"**Verfügbar:** {emoji_count}\n**Status:** {get_emoji('success')} Online"
+        else:
+            emoji_status = f"**Status:** {get_emoji('warning')} Nicht initialisiert"
+            
+        embed.add_field(
+            name="🎭 Emojis", 
+            value=emoji_status,
+            inline=True
+        )
         
         embed.set_thumbnail(url=self.bot.user.display_avatar.url)
         

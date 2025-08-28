@@ -25,7 +25,7 @@ from .utils.logger import (
 from .utils.emoji_manager import EmojiManager, emoji_manager
 
 # Imports für intelligente Systeme
-from .systems import initialize_intelligent_systems
+from .systems import setup_systems_for_bot
 from .systems.command_registration_system import CommandRegistrationSystem
 
 # Umgebungsvariablen laden
