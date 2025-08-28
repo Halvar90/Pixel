@@ -51,7 +51,10 @@ class PixelBot(commands.Bot):
         self.emoji_manager = EmojiManager(self)
         
         # Guild ID für Emojis (aus Umgebungsvariablen)
-        self.main_guild_id = int(os.getenv('MAIN_GUILD_ID', '0'))
+        guild_id_str = os.getenv('MAIN_GUILD_ID', '0')
+        print(f"DEBUG: MAIN_GUILD_ID aus Umgebung: '{guild_id_str}'")
+        self.main_guild_id = int(guild_id_str) if guild_id_str and guild_id_str != '0' else 0
+        print(f"DEBUG: Parsed main_guild_id: {self.main_guild_id}")
         
         # Graceful Shutdown Setup
         self._setup_signal_handlers()

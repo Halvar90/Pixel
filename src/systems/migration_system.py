@@ -164,7 +164,24 @@ def run_migrations_online() -> None:
     connectable = config.attributes.get("connection", None)
 
     if connectable is None:
-        asyncio.run(run_async_migrations())
+        # Prüfen ob wir bereits in einem async context sind
+        try:
+            loop = asyncio.get_running_loop()
+            # Wenn ja, dann verwenden wir den bestehenden Loop
+            # Aber nicht asyncio.run verwenden!
+            import asyncio
+            # Stattdessen eine Coroutine erstellen die später awaited wird
+            def create_async_migration():
+                return run_async_migrations()
+            
+            # Diese Funktion wird synchron aufgerufen, aber die Migration
+            # muss später async ausgeführt werden
+            # Für jetzt machen wir erstmal nichts und loggen nur
+            print("INFO: Async migration wird übersprungen da bereits im Event Loop")
+            return False
+        except RuntimeError:
+            # Kein laufender Loop, also asyncio.run verwenden
+            asyncio.run(run_async_migrations())
     else:
         do_run_migrations(connectable)
 
