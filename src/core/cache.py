@@ -38,10 +38,10 @@ class Cache:
             # Teste die Verbindung
             await self.redis.ping()
             
-            logger.info("✅ Redis-Verbindung erfolgreich hergestellt")
+            logger.info("✅ ERFOLGREICH: Redis-Verbindung hergestellt")
             
         except Exception as e:
-            logger.error(f"❌ Fehler bei Redis-Verbindung: {e}")
+            logger.error(f"❌ FEHLER: Redis-Verbindung fehlgeschlagen: {e}")
             raise
     
     async def disconnect(self):

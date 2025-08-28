@@ -72,13 +72,32 @@ class PixelBot(commands.Bot):
         """Wird ausgeführt, bevor der Bot sich zu Discord verbindet."""
         logging.info("🔧 Bot Setup wird gestartet...")
         
-        # Emoji Manager nur erstellen, aber noch nicht synchronisieren
+        # 1. Datenbank und Cache initialisieren
+        try:
+            log_startup_step("[4/7] Initialisiere Datenbank-Verbindung")
+            from .core.database import db
+            await db.connect()
+            await db.execute_schema()
+            log_startup_step("✅ ERFOLGREICH: Datenbank verbunden und Schema ausgeführt")
+        except Exception as e:
+            logging.error(f"❌ Fehler bei Datenbankverbindung: {e}")
+            
+        try:
+            log_startup_step("[5/7] Initialisiere Redis-Cache")
+            from .core.cache import cache
+            await cache.connect()
+            log_startup_step("✅ ERFOLGREICH: Redis-Cache verbunden")
+        except Exception as e:
+            logging.error(f"❌ Fehler bei Redis-Verbindung: {e}")
+        
+        # 2. Emoji Manager nur erstellen, aber noch nicht synchronisieren
         # (Synchronisation passiert in on_ready wenn Guild-ID verfügbar ist)
         from .utils.emoji_manager import EmojiManager
         self.emoji_manager = EmojiManager(self)
         
-        # Intelligente Systeme initialisieren
+        # 3. Intelligente Systeme initialisieren
         try:
+            log_startup_step("[6/7] Starte intelligente Systeme")
             from .systems import setup_systems_for_bot
             database_url = os.getenv('DATABASE_URL')
             
@@ -90,7 +109,8 @@ class PixelBot(commands.Bot):
         except Exception as e:
             logging.error(f"❌ Fehler bei intelligenten Systemen: {e}")
         
-        # Cogs laden
+        # 4. Cogs laden
+        log_startup_step("[7/7] Lade Bot-Module (Cogs)")
         await self._load_cogs()
         
         logging.info("✅ Bot Setup abgeschlossen.")
@@ -195,6 +215,17 @@ async def main():
     finally:
         if 'bot' in locals():
             log_startup_step(4, 4, "Schließe Bot-Verbindung sauber")
+            
+            # Datenbank und Cache sauber schließen
+            try:
+                from .core.database import db
+                from .core.cache import cache
+                await db.disconnect()
+                await cache.disconnect()
+                logging.info("🔌 Datenbank und Cache Verbindungen geschlossen")
+            except Exception as e:
+                logging.error(f"❌ Fehler beim Schließen der Verbindungen: {e}")
+            
             await bot.close()
             progress.success("Bot sauber heruntergefahren")
         progress.end_section(success=True)

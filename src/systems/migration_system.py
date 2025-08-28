@@ -371,10 +371,11 @@ def downgrade() -> None:
             logger.error(f"Fehler bei Migration-Status-Check: {e}")
             return {'error': str(e)}
 
-    async def create_migration(self, message: str = None) -> bool:
+    async def create_migration(self, message: str = None, force_check: bool = True) -> bool:
         """Erstellt neue Migration wenn Änderungen erkannt wurden"""
         try:
-            if not await self.detect_schema_changes():
+            # Schema-Änderungen nur prüfen wenn force_check True ist
+            if force_check and not await self.detect_schema_changes():
                 logger.info("Keine Migrationen erforderlich")
                 return False
             
@@ -442,8 +443,8 @@ def downgrade() -> None:
             result['changes_detected'] = changes_detected
             
             if changes_detected:
-                # 2. Migration erstellen
-                migration_created = await self.create_migration("Auto-detected schema changes")
+                # 2. Migration erstellen (ohne erneute Schema-Prüfung)
+                migration_created = await self.create_migration("Auto-detected schema changes", force_check=False)
                 result['migration_created'] = migration_created
                 
                 if migration_created:

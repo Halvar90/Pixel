@@ -33,10 +33,10 @@ class Database:
                 command_timeout=60
             )
             
-            logger.info("✅ Datenbankverbindung erfolgreich hergestellt")
+            logger.info("✅ ERFOLGREICH: Datenbankverbindung hergestellt")
             
         except Exception as e:
-            logger.error(f"❌ Fehler bei Datenbankverbindung: {e}")
+            logger.error(f"❌ FEHLER: Datenbankverbindung fehlgeschlagen: {e}")
             raise
     
     async def disconnect(self):
@@ -57,12 +57,12 @@ class Database:
                 async with self.pool.acquire() as conn:
                     await conn.execute(schema_sql)
                 
-                logger.info("✅ Datenbankschema erfolgreich ausgeführt")
+                logger.info("✅ ERFOLGREICH: Datenbankschema ausgeführt")
             else:
-                logger.warning("⚠️ schema.sql nicht gefunden")
+                logger.warning("⚠️ WARNUNG: schema.sql nicht gefunden")
                 
         except Exception as e:
-            logger.error(f"❌ Fehler beim Ausführen des Schemas: {e}")
+            logger.error(f"❌ FEHLER: Schema-Ausführung fehlgeschlagen: {e}")
             raise
 
 # Globale Datenbankinstanz
